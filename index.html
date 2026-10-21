@@ -32,6 +32,12 @@
       </div>
 
       <section class="slide-title" aria-labelledby="slideTitle">
+        <figure class="slide-figure" id="slideFigure">
+          <button type="button" class="slide-img-btn" id="slideZoom" aria-label="スライド画像を拡大">
+            <img id="slideImg" alt="" width="1280" height="720" decoding="async">
+          </button>
+          <figcaption>タップで拡大・左右スワイプでスライド移動</figcaption>
+        </figure>
         <div class="slide-chip" id="slideChip">SLIDE 01</div>
         <h2 id="slideTitle">Neither Too Close Nor Too Far</h2>
         <div class="slide-sub">
@@ -69,6 +75,7 @@
         <div class="script-heading">
           <h2 id="scriptHeading">読み上げ原稿</h2>
           <div class="view-chips" role="group" aria-label="表示の切り替え">
+            <label class="chip"><input type="checkbox" id="showSlide" checked><span>スライド</span></label>
             <label class="chip"><input type="checkbox" id="showKana" checked><span>カタカナ</span></label>
             <label class="chip"><input type="checkbox" id="showJa" checked><span>日本語</span></label>
             <label class="chip"><input type="checkbox" id="memorize"><span>暗記モード</span></label>
@@ -99,6 +106,15 @@
       <label class="slide-select" for="jump">スライドを選ぶ<select id="jump" aria-label="移動するスライドを選択"></select></label>
       <button id="next" type="button" class="primary" aria-label="次のスライドへ進む">次へ →</button>
     </nav>
+    <dialog id="lightbox" class="lightbox" aria-label="スライド拡大表示">
+      <img id="lightboxImg" alt="">
+      <div class="lightbox-bar">
+        <button type="button" id="lbPrev" class="secondary">←</button>
+        <span id="lbCount"></span>
+        <button type="button" id="lbNext" class="secondary">→</button>
+        <button type="button" id="lbClose" class="primary">閉じる</button>
+      </div>
+    </dialog>
     <footer>元の発表資料から、英語・カタカナ・日本語訳のみを収録しています。録音・音声認識・マイクは使用しません。キーボード：← → でスライド移動、スペースで読み上げ／停止。</footer>
   </div>
 </body>

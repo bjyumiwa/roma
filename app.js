@@ -25,7 +25,13 @@
     english: $('englishBlock'), kanaList: $('kanaList'), jaList: $('jaList'),
     kanaPanel: $('kanaPanel'), jaPanel: $('jaPanel'),
     prev: $('previous'), next: $('next'), jump: $('jump'), intro: $('intro'),
+    showSlide: $('showSlide'), figure: $('slideFigure'), img: $('slideImg'), zoom: $('slideZoom'),
+    lightbox: $('lightbox'), lbImg: $('lightboxImg'), lbCount: $('lbCount'),
+    lbPrev: $('lbPrev'), lbNext: $('lbNext'), lbClose: $('lbClose'),
   };
+
+  // スライド画像：1ファイル版では window.SLIDE_IMAGES に埋め込み、通常版は slides/ フォルダ
+  const imgSrc = (n) => (window.SLIDE_IMAGES && window.SLIDE_IMAGES[n]) || `slides/slide-${pad(n)}.jpg`;
 
   // ---------- 保存（使えない環境でも動くように） ----------
   const store = {
@@ -54,7 +60,7 @@
   function persist() {
     store.save({
       idx: state.idx, speed: el.speed.value, voice: el.voice.value,
-      showKana: el.showKana.checked, showJa: el.showJa.checked, memorize: el.memorize.checked,
+      showSlide: el.showSlide.checked, showKana: el.showKana.checked, showJa: el.showJa.checked, memorize: el.memorize.checked,
       repeat: el.repeat.checked, autoNext: el.autoNext.checked, pauseEach: el.pauseEach.checked,
     });
   }
@@ -73,6 +79,12 @@
     el.next.disabled = state.idx === total - 1;
     el.jump.value = String(state.idx);
     document.title = `${pad(s.n)} ${s.title}｜Vienna UK Reader`;
+
+    el.img.classList.remove('missing');
+    el.img.src = imgSrc(s.n);
+    el.img.alt = `スライド${s.n}: ${s.title}`;
+    if (SLIDES[state.idx + 1]) { const pre = new Image(); pre.src = imgSrc(SLIDES[state.idx + 1].n); }
+    if (el.lightbox.open) syncLightbox();
 
     // English: スライド内の英文を1つの段落にまとめる
     el.english.replaceChildren();
@@ -120,7 +132,32 @@
     });
   }
 
+  function syncLightbox() {
+    const s = SLIDES[state.idx];
+    el.lbImg.src = imgSrc(s.n);
+    el.lbImg.alt = el.img.alt;
+    el.lbCount.textContent = `${pad(state.idx + 1)} / ${pad(SLIDES.length)}`;
+    el.lbPrev.disabled = state.idx === 0;
+    el.lbNext.disabled = state.idx === SLIDES.length - 1;
+  }
+
+  // 左右スワイプでスライド移動
+  function addSwipe(node) {
+    let x0 = null, y0 = null, moved = false;
+    node.addEventListener('touchstart', (e) => { const t = e.touches[0]; x0 = t.clientX; y0 = t.clientY; moved = false; }, { passive: true });
+    node.addEventListener('touchend', (e) => {
+      if (x0 == null) return;
+      const t = e.changedTouches[0]; const dx = t.clientX - x0; const dy = t.clientY - y0;
+      x0 = null;
+      if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.5) {
+        moved = true; go(state.idx + (dx < 0 ? 1 : -1), { keepScroll: true });
+      }
+    }, { passive: true });
+    node.addEventListener('click', (e) => { if (moved) { e.preventDefault(); e.stopImmediatePropagation(); moved = false; } }, true);
+  }
+
   function applyView() {
+    el.figure.classList.toggle('hidden', !el.showSlide.checked);
     el.kanaPanel.classList.toggle('hidden', !el.showKana.checked);
     el.jaPanel.classList.toggle('hidden', !el.showJa.checked);
     el.english.classList.toggle('memorize', el.memorize.checked);
@@ -329,9 +366,11 @@
     try { history.replaceState(null, '', `#s${nextIdx + 1}`); } catch { /* file:// など */ }
     render();
     persist();
+    if (!opts.keepPlaying && !opts.keepScroll) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
     if (!opts.keepPlaying) {
       setStatus('「読み上げ」で英国英語のお手本を聞けます。');
-      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   }
 
@@ -343,7 +382,7 @@
 
     // 保存済み設定を復元
     if (saved.speed) el.speed.value = saved.speed;
-    for (const k of ['showKana', 'showJa', 'memorize', 'repeat', 'autoNext', 'pauseEach']) {
+    for (const k of ['showSlide', 'showKana', 'showJa', 'memorize', 'repeat', 'autoNext', 'pauseEach']) {
       if (typeof saved[k] === 'boolean') el[k].checked = saved[k];
     }
 
@@ -358,7 +397,18 @@
       else { resetTimer(); startTimer(); setStatus('自分で話してみましょう。もう一度タップで停止。'); }
     });
 
-    [el.showKana, el.showJa, el.memorize].forEach((c) => c.addEventListener('change', () => {
+    el.img.addEventListener('error', () => el.img.classList.add('missing'));
+    el.zoom.addEventListener('click', () => {
+      syncLightbox();
+      if (typeof el.lightbox.showModal === 'function') el.lightbox.showModal(); else window.open(el.img.src, '_blank');
+    });
+    el.lbClose.addEventListener('click', () => el.lightbox.close());
+    el.lbPrev.addEventListener('click', () => go(state.idx - 1, { keepScroll: true }));
+    el.lbNext.addEventListener('click', () => go(state.idx + 1, { keepScroll: true }));
+    el.lbImg.addEventListener('click', () => el.lightbox.close());
+    addSwipe(el.zoom); addSwipe(el.lbImg);
+
+    [el.showSlide, el.showKana, el.showJa, el.memorize].forEach((c) => c.addEventListener('change', () => {
       if (c === el.memorize) document.querySelectorAll('.sent.revealed').forEach((n) => n.classList.remove('revealed'));
       applyView(); persist();
     }));
@@ -380,6 +430,7 @@
 
     document.addEventListener('keydown', (e) => {
       const tag = (e.target.tagName || '').toLowerCase();
+      if (el.lightbox.open && e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
       if (tag === 'select' || tag === 'input' || e.metaKey || e.ctrlKey || e.altKey) return;
       if (e.key === 'ArrowRight') { e.preventDefault(); go(state.idx + 1); }
       else if (e.key === 'ArrowLeft') { e.preventDefault(); go(state.idx - 1); }
