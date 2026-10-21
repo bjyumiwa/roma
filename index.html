@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#17364c">
   <meta name="description" content="ウィーン発表用：英国英語・UK発音カタカナ・日本語訳をスライドごとに表示し、読み上げる練習アプリ">
+  <meta name="robots" content="noindex, nofollow">
   <title>Vienna UK Reader｜英語発表読み上げ</title>
   <link rel="stylesheet" href="style.css">
   <link rel="manifest" href="manifest.webmanifest">
@@ -16,41 +17,89 @@
 <body>
   <div class="app">
     <header class="topbar">
-      <div class="brand"><span class="mark">🇬🇧</span><div><span class="overline">VCAH 2026 • BRITISH ENGLISH</span><strong>Vienna UK Reader</strong></div></div>
+      <div class="brand">
+        <span class="mark" aria-hidden="true">🇬🇧</span>
+        <div><span class="overline">VCAH 2026 • BRITISH ENGLISH</span><strong>Vienna UK Reader</strong></div>
+      </div>
       <span class="counter" id="slideCount">01 / 16</span>
     </header>
+
     <main>
-      <div class="intro">
+      <div class="intro" id="intro">
         <div class="eyebrow">1枚ずつ、聞いて覚える</div>
         <h1>ウィーン発表<br><span>英語読み上げ練習</span></h1>
-        <p>英語・UK発音に近いカタカナ・日本語訳を見ながら練習できます。画面下の「次へ」を押すと次のスライドへ進みます。</p>
+        <p>スライドごとに英語原稿をまとめて表示します。文をタップするとその文だけ、「このスライドを読み上げ」で全文を続けて聞けます。</p>
       </div>
+
       <section class="slide-title" aria-labelledby="slideTitle">
         <div class="slide-chip" id="slideChip">SLIDE 01</div>
         <h2 id="slideTitle">Neither Too Close Nor Too Far</h2>
-        <div class="slide-sub"><span id="lineCount">全5文</span><span id="slidePace">発表目安40秒</span></div>
+        <div class="slide-sub">
+          <span id="lineCount">全5文</span>
+          <span id="slidePace">発表目安40秒</span>
+          <button id="timer" class="timer" type="button" aria-label="自分で話す練習用ストップウォッチ（タップで開始・停止）">⏱ 0:00</button>
+        </div>
+        <div class="pace-bar" aria-hidden="true"><div id="paceFill"></div></div>
       </section>
+
       <section class="controls" aria-label="英語の音声読み上げ">
-        <div class="big-controls"><button class="primary" id="readAll" type="button">▶ このスライドを読み上げ</button><button id="stop" class="stop" type="button">■ 停止</button></div>
+        <div class="big-controls">
+          <button class="primary" id="readAll" type="button">▶ このスライドを読み上げ</button>
+          <button id="stop" class="stop" type="button">■ 停止</button>
+        </div>
+        <div class="toggles" role="group" aria-label="練習モード">
+          <label class="toggle"><input type="checkbox" id="repeat"><span>🔁 くり返し</span></label>
+          <label class="toggle"><input type="checkbox" id="autoNext"><span>⏭ 通し練習</span></label>
+          <label class="toggle"><input type="checkbox" id="pauseEach"><span>🗣 1文ごとに間</span></label>
+        </div>
         <div class="settings">
           <label for="voice">英国英語の声 <select id="voice"><option value="default">端末へ英国英語を指定</option></select></label>
-          <label for="speed">読み上げ速度 <select id="speed"><option value="0.75">ゆっくり 0.75倍</option><option value="0.85" selected>練習 0.85倍</option><option value="1">通常 1.0倍</option><option value="1.1">速め 1.1倍</option></select></label>
+          <label for="speed">読み上げ速度 <select id="speed">
+            <option value="0.75">ゆっくり 0.75倍</option>
+            <option value="0.85" selected>練習 0.85倍</option>
+            <option value="1">通常 1.0倍</option>
+            <option value="1.1">速め 1.1倍</option>
+          </select></label>
         </div>
         <p id="voiceNotice" class="voice-notice" role="status">端末の英国英語音声を確認しています。</p>
         <p id="status" class="status" role="status" aria-live="polite">「読み上げ」で英国英語のお手本を聞けます。</p>
       </section>
+
       <section class="script" aria-labelledby="scriptHeading">
-        <div class="script-heading"><h2 id="scriptHeading">読み上げ原稿</h2><small>英語 → カタカナ → 日本語</small></div>
-        <div id="sentences"></div>
+        <div class="script-heading">
+          <h2 id="scriptHeading">読み上げ原稿</h2>
+          <div class="view-chips" role="group" aria-label="表示の切り替え">
+            <label class="chip"><input type="checkbox" id="showKana" checked><span>カタカナ</span></label>
+            <label class="chip"><input type="checkbox" id="showJa" checked><span>日本語</span></label>
+            <label class="chip"><input type="checkbox" id="memorize"><span>暗記モード</span></label>
+          </div>
+        </div>
+
+        <article class="panel panel-en" aria-labelledby="enHeading">
+          <div class="panel-head"><h3 id="enHeading">English</h3><small>まとめて読む・文をタップで1文再生</small></div>
+          <p id="englishBlock" class="english-block"></p>
+        </article>
+
+        <article class="panel panel-kana" id="kanaPanel" aria-labelledby="kanaHeading">
+          <div class="panel-head"><h3 id="kanaHeading">カタカナ（UK発音の目安）</h3><small>／ は息つぎ・区切り</small></div>
+          <ol id="kanaList" class="line-list"></ol>
+        </article>
+
+        <article class="panel panel-ja" id="jaPanel" aria-labelledby="jaHeading">
+          <div class="panel-head"><h3 id="jaHeading">日本語訳</h3></div>
+          <ol id="jaList" class="line-list"></ol>
+        </article>
+
         <p class="pronunciation-note">カタカナは英国英語の発音や音のつながりを学ぶための目安です。実際の発音・強勢・イントネーションはお手本音声を優先してください。</p>
       </section>
     </main>
+
     <nav class="nav" aria-label="スライド移動">
       <button id="previous" type="button" class="secondary">← 前へ</button>
       <label class="slide-select" for="jump">スライドを選ぶ<select id="jump" aria-label="移動するスライドを選択"></select></label>
       <button id="next" type="button" class="primary" aria-label="次のスライドへ進む">次へ →</button>
     </nav>
-    <footer>元の発表資料から、英語・カタカナ・日本語訳のみを収録しています。録音・音声認識・マイクは使用しません。</footer>
+    <footer>元の発表資料から、英語・カタカナ・日本語訳のみを収録しています。録音・音声認識・マイクは使用しません。キーボード：← → でスライド移動、スペースで読み上げ／停止。</footer>
   </div>
 </body>
 </html>
