@@ -99,7 +99,7 @@
     toggleSupport();
     refreshProgress();
     refreshRecordingPlayback();
-    setStatus('speechStatus','英語の文をタップすると、その1文を選べます。');
+    setStatus('speechStatus','英語の文をタップすると、その1文を選べます。UK音声を選んでください。');
     save();
   }
   function toggleSupport() {
@@ -113,18 +113,51 @@
     currentIndex=n;renderSlide();
   }
 
+  // British English only. Browser voice names vary across Android devices.
+  const isBritishVoice = (v) => /^en[-_]GB(?:[-_]|$)/i.test(v.lang || '');
+  const voiceId = (v) => `${v.name}::${v.lang}`;
+  function showUKVoiceStatus() {
+    const hint = $('voiceHelp');
+    if (!hasTTS) {
+      hint.textContent = 'このブラウザーは音声読み上げに対応していません。';
+      return;
+    }
+    if (!voices.length) {
+      hint.textContent = '英国英語の音声が見つかりません。Androidの読み上げ設定で English (United Kingdom) を追加して「再検出」してください。「端末に en-GB を指定」は英国アクセントを保証できないため、手動で選んだ場合のみ使えます。';
+    } else if ($('voicePicker').value === 'device') {
+      hint.textContent = '端末へ en-GB を指定しますが、声のアクセントは保証できません。上のリストから UK 音声を選ぶと確実です。';
+    } else {
+      hint.textContent = '🇬🇧 英国英語（en-GB）の音声を選択しています。';
+    }
+  }
   function populateVoices() {
     if (!hasTTS) return;
-    const all=window.speechSynthesis.getVoices();
-    if (!all.length) return;
-    voices = all.filter(v=>/^en([-_]|$)/i.test(v.lang));
-    voices.sort((a,b)=> (a.lang.startsWith('en-US') ? -1 : a.lang.startsWith('en-GB') ? 0 : 1) - (b.lang.startsWith('en-US') ? -1 : b.lang.startsWith('en-GB') ? 0 : 1));
-    const select=$('voicePicker'), before=select.value || saved.voice || '';
-    select.replaceChildren();
-    const blank=document.createElement('option');blank.value='';blank.textContent='端末の英語音声を使用';select.appendChild(blank);
-    voices.forEach((v,i)=>{const o=document.createElement('option');o.value=String(i);o.textContent=`${v.name} (${v.lang})`;select.appendChild(o);});
-    if(before!=='' && voices[Number(before)]) select.value=before;
-    else if(voices.length) select.value='0';
+    const all = window.speechSynthesis.getVoices();
+    const choice = $('voicePicker');
+    const previous = choice.value && choice.value !== 'device' ? choice.value : saved.voice;
+    voices = all.filter(isBritishVoice).sort((a,b) =>
+      Number(b.localService) - Number(a.localService) || a.name.localeCompare(b.name));
+    choice.replaceChildren();
+    voices.forEach((v)=>{
+      const option = document.createElement('option');
+      option.value = voiceId(v);
+      option.textContent = `🇬🇧 ${v.name} (${v.lang})`;
+      choice.appendChild(option);
+    });
+    if (!voices.length) {
+      const missing = document.createElement('option');
+      missing.value = 'missing';
+      missing.textContent = 'UK音声なし（読み上げ停止）';
+      choice.appendChild(missing);
+    }
+    const backup = document.createElement('option');
+    backup.value = 'device';
+    backup.textContent = '端末に en-GB を指定（アクセント保証なし）';
+    choice.appendChild(backup);
+    if (previous && voices.some(v=>voiceId(v)===previous)) choice.value=previous;
+    else if (!voices.length && previous === 'device') choice.value='device';
+    else choice.value=voices.length ? voiceId(voices[0]) : 'missing';
+    showUKVoiceStatus();
   }
   function stopSpeak() {
     ttsToken++;
@@ -133,10 +166,14 @@
     audioIsSpeaking=false;
     highlightSpeaking(-1);
   }
-  function selectedVoice(){const id=$('voicePicker').value;return id===''?null:(voices[Number(id)] || null);}
+  function selectedVoice(){const id=$('voicePicker').value;return voices.find(v=>voiceId(v)===id) || null;}
   function speakQueue(queue) {
     if(!hasTTS){setStatus('speechStatus','このブラウザーでは読み上げに対応していません。Android版Chromeを試してください。');return;}
     stopSpeak();stopRecognition();
+    if ($('voicePicker').value === 'missing') {
+      setStatus('speechStatus','英国英語の音声がありません。端末に English (United Kingdom) を追加して「再検出」してください。');
+      return;
+    }
     const token=ttsToken;
     const todo=queue.filter(x=>cleanForTTS(x.text));
     if(!todo.length)return;
@@ -147,10 +184,10 @@
       if(i>=todo.length){audioIsSpeaking=false;highlightSpeaking(-1);setStatus('speechStatus','再生が終わりました。');return;}
       const item=todo[i];i++;
       highlightSpeaking(item.index);
-      setStatus('speechStatus',`読み上げ中：${i} / ${todo.length} 文`);
+      setStatus('speechStatus',selectedVoice() ? `🇬🇧 英国英語で読み上げ中：${i} / ${todo.length} 文` : `en-GB 指定で読み上げ中：${i} / ${todo.length} 文（アクセント未確認）`);
       const utterance=new SpeechSynthesisUtterance(cleanForTTS(item.text));
-      utterance.lang='en-US';utterance.rate=Number($('speedRange').value)||0.85;utterance.pitch=1;
-      const voice=selectedVoice();if(voice){utterance.voice=voice;utterance.lang=voice.lang;}
+      utterance.lang='en-GB';utterance.rate=Number($('speedRange').value)||0.85;utterance.pitch=1;
+      const voice=selectedVoice();if(voice){utterance.voice=voice;utterance.lang='en-GB';}
       utterance.onend=()=>{if(token===ttsToken)ttsTimeout=setTimeout(next,220);};
       utterance.onerror=event=>{
         if(token!==ttsToken)return;
@@ -176,7 +213,7 @@
     stopSpeak();stopRecognition();
     const target=lines[selectedLine]||'';
     const rec=new ASRClass();recognition=rec;isRecognizing=true;
-    rec.lang='en-US';rec.continuous=false;rec.interimResults=true;rec.maxAlternatives=1;
+    rec.lang='en-GB';rec.continuous=false;rec.interimResults=true;rec.maxAlternatives=1;
     $('recognizeBtn').textContent='■ 音声認識を停止';
     $('transcriptArea').hidden=false;$('targetText').textContent=target;$('transcriptText').textContent='…';
     setStatus('recognitionStatus','英語で、選んだ1文を話してください。');
@@ -271,7 +308,8 @@
   $('showKana').addEventListener('change',()=>{toggleSupport();save();});
   $('showJapanese').addEventListener('change',()=>{toggleSupport();save();});
   $('speedRange').addEventListener('input',()=>{$('speedText').textContent=`${Number($('speedRange').value).toFixed(2)}×`;save();});
-  $('voicePicker').addEventListener('change',save);
+  $('voicePicker').addEventListener('change',()=>{showUKVoiceStatus();save();});
+  $('refreshVoicesBtn').addEventListener('click',()=>{populateVoices();setStatus('speechStatus','英国英語の音声を再検出しました。');});
   $('playAllBtn').addEventListener('click',speakAll);
   $('playLineBtn').addEventListener('click',()=>speakLine(selectedLine));
   $('stopSpeakBtn').addEventListener('click',()=>{stopSpeak();setStatus('speechStatus','再生を停止しました。');});

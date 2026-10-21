@@ -3,3 +3,7 @@
 @media(max-width:900px){.content-grid{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.coach-panel{grid-row:1/span 3}.card{padding:17px}.slide-navigation button{font-size:11px}.welcome{padding:25px 27px}}
 @media(max-width:740px){.shell{padding:0 13px}.site-header{padding:15px 2px}.brand-name{font-size:17px}.brand-mini{font-size:11px;padding-left:2px}.header-right{font-size:11px}.welcome{border-radius:15px;padding:25px 21px;margin-bottom:14px}.welcome h1{font-size:26px}.mobile-only{display:block}.content-grid{display:flex;flex-direction:column;gap:13px}.card{width:100%;padding:19px;border-radius:14px}.slide-panel h2{min-height:0}.slide-panel{order:1}.coach-panel{order:2}.record-panel{order:3}.timer-panel{order:4}.line-text{font-size:18px}.playback-buttons button{flex-grow:1}.hero-metrics{gap:8px 13px}.welcome:after{right:-165px;top:-135px}.timer{font-size:42px}.complete-btn{padding:13px}}
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{scroll-behavior:auto!important;transition:none!important}}
+
+/* UK voice controls */
+.voice-row .tiny-voice{flex:0 0 auto;padding:7px 9px;font-size:11px;border-radius:8px}.voice-help{font-size:11px;color:#276263;line-height:1.5;padding:6px 2px 0;min-height:1em}
+@media(max-width:430px){.voice-row{flex-wrap:wrap}.voice-row select{flex-basis:55%}}

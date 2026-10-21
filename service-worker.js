@@ -1,5 +1,5 @@
 /* Optional offline support. Increase version when changing published files. */
-const CACHE='vienna-speak-coach-v1';
+const CACHE='vienna-speak-coach-uk-v2';
 const FILES=[
   './','./index.html','./app.js','./data.js','./style.css','./manifest.webmanifest',
   './icons/icon-192.png','./icons/icon-512.png',
