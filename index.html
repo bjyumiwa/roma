@@ -3,84 +3,54 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#11284a">
-  <meta name="description" content="ウィーン国際学会発表の英語を、聞いて、話して、録音して練習するアプリ。">
-  <title>Vienna Speak Coach | ウィーン英語発表練習</title>
+  <meta name="theme-color" content="#17364c">
+  <meta name="description" content="ウィーン発表用：英国英語・UK発音カタカナ・日本語訳をスライドごとに表示し、読み上げる練習アプリ">
+  <title>Vienna UK Reader｜英語発表読み上げ</title>
+  <link rel="stylesheet" href="style.css">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" type="image/png" href="icons/icon-192.png">
   <link rel="apple-touch-icon" href="icons/icon-192.png">
-  <link rel="stylesheet" href="style.css">
   <script src="data.js" defer></script>
   <script src="app.js" defer></script>
 </head>
 <body>
-<div class="shell">
-  <header class="site-header">
-    <div class="brand"><span class="brand-mark" aria-hidden="true">◉</span><div><div class="kicker">VCAH 2026 / VIENNA · UK ENGLISH</div><div class="brand-name">Speak Coach UK <span class="brand-mini">英語発表練習</span></div></div></div>
-    <div class="header-right"><span id="doneCount">0 / 16 練習済み</span><button id="installBtn" type="button" class="tiny-button" hidden>アプリを追加</button></div>
-  </header>
-
-  <section class="welcome">
-    <div class="eyebrow">NEITHER TOO CLOSE NOR TOO FAR</div>
-    <h1>聞いて、話して、<br class="mobile-only">本番に備える。</h1>
-    <p>PowerPointの発表原稿を16枚すべて収録。英国英語のお手本を聞き、自分の声を録音しながら練習できます。</p>
-    <div class="progress-bar" aria-label="練習進捗"><div id="progressFill"></div></div>
-    <div class="hero-metrics"><span>全16スライド</span><span>原稿の目安 <strong>9分45秒</strong></span><span>録画規定 <strong>10分超</strong></span></div>
-  </section>
-
-  <main class="content-grid">
-    <section class="slide-panel card" aria-label="スライドの確認">
-      <div class="section-overline">01 / スライドを確認</div>
-      <div class="slide-heading"><label for="slidePicker">スライドを選ぶ</label><select id="slidePicker" aria-label="スライド番号を選ぶ"></select></div>
-      <div class="visual-frame"><img id="slideImage" src="slides/slide-01.webp" alt="発表スライド 1" width="1001" height="563"></div>
-      <h2 id="slideTitle">Neither Too Close Nor Too Far</h2>
-      <div class="slide-meta"><span id="slideNumber">01 / 16</span><span id="slidePace">目安 40秒</span></div>
-      <div class="slide-navigation"><button type="button" id="prevBtn" class="secondary">← 前のスライド</button><button type="button" id="nextBtn" class="primary">次のスライド →</button></div>
-      <button type="button" id="completeBtn" class="complete-btn">□ このスライドを練習済みにする</button>
-      <div class="sub-note">画像と原稿は、アップロードされたPowerPointから作成しています。</div>
-    </section>
-
-    <section class="coach-panel card" aria-label="音声練習">
-      <div class="section-overline">02 / 英語を聞く・話す</div>
-      <h2 class="coach-title">発表原稿</h2>
-      <div class="playback-box">
-        <div class="playback-buttons"><button id="playAllBtn" type="button" class="primary large">▶ スライド全体を聞く</button><button id="playLineBtn" type="button" class="secondary">▶ 選んだ1文</button><button id="stopSpeakBtn" type="button" class="secondary">■ 停止</button></div>
-        <div class="speed-row"><label for="speedRange">再生速度 <strong id="speedText">0.85×</strong></label><input id="speedRange" type="range" min="0.6" max="1.25" step="0.05" value="0.85"></div>
-        <div class="voice-row"><label for="voicePicker">🇬🇧 UK音声</label><select id="voicePicker" aria-label="英国英語の声を選択"><option value="device">端末に en-GB を指定</option></select><button id="refreshVoicesBtn" type="button" class="secondary tiny-voice" title="利用できる英国英語の声を確認">再検出</button></div><div id="voiceHelp" class="voice-help" role="status">英国英語（en-GB）の音声を探しています。</div>
-        <div id="speechStatus" class="status" role="status">英語の文を押すと、その1文を選べます。</div>
+  <div class="app">
+    <header class="topbar">
+      <div class="brand"><span class="mark">🇬🇧</span><div><span class="overline">VCAH 2026 • BRITISH ENGLISH</span><strong>Vienna UK Reader</strong></div></div>
+      <span class="counter" id="slideCount">01 / 16</span>
+    </header>
+    <main>
+      <div class="intro">
+        <div class="eyebrow">1枚ずつ、聞いて覚える</div>
+        <h1>ウィーン発表<br><span>英語読み上げ練習</span></h1>
+        <p>英語・UK発音に近いカタカナ・日本語訳を見ながら練習できます。画面下の「次へ」を押すと次のスライドへ進みます。</p>
       </div>
-      <div class="display-switches"><label><input type="checkbox" id="showKana" checked> カタカナ発音</label><label><input type="checkbox" id="showJapanese" checked> 日本語訳</label></div>
-      <div id="scriptContent" class="script-content"></div>
-      <div class="tip">英語の文をタップして選び、<strong>「選んだ1文」</strong>で繰り返し聞けます。カタカナ表記は英国発音を正確には表しません。英国英語のお手本音声を優先してください。</div>
-    </section>
-
-    <section class="record-panel card" aria-label="自分の声の練習">
-      <div class="section-overline">03 / 自分の声を確認</div>
-      <h2>声に出して練習</h2>
-      <p class="muted">録音した声を聞き返せます。録音はこの端末内で扱い、サーバーへ自動送信しません。</p>
-      <div class="record-buttons"><button id="recordBtn" type="button" class="primary">● 録音開始</button><button id="recordStopBtn" type="button" class="secondary" disabled>■ 録音終了</button></div>
-      <div id="recordStatus" class="status" role="status">スマホのマイク使用を許可してください。</div>
-      <div id="playbackArea" hidden><label for="recordedAudio" class="field-label">あなたの録音</label><audio id="recordedAudio" controls preload="none"></audio><a id="downloadAudio" class="download-link" href="#">↓ 録音をスマホに保存</a></div>
-      <hr>
-      <h3>英語がどう聞き取られるか確認 <span class="optional">任意</span></h3>
-      <p class="muted">選んだ英文を読み上げてみましょう。Chromeの英国英語（en-GB）音声認識が利用できる場合だけ動きます。</p>
-      <button id="recognizeBtn" type="button" class="secondary">🎙 選んだ英文を音声認識</button>
-      <div id="recognitionStatus" class="status" role="status"></div>
-      <div id="transcriptArea" class="transcript-area" hidden><div class="field-label">認識された英語</div><p id="transcriptText"></p><div class="target-line-label">比較する原稿</div><p id="targetText"></p></div>
-      <p class="fineprint">音声認識の結果は発音の採点ではありません。利用時はGoogleなどブラウザーの音声認識サービスに音声が送信される場合があります。</p>
-    </section>
-
-    <section class="timer-panel card" aria-label="全体通し練習">
-      <div class="section-overline">04 / 本番の時間を計る</div>
-      <h2>通し練習タイマー</h2>
-      <div class="timer" id="timerText" aria-live="off">00:00</div>
-      <p id="timerInfo" class="muted">全スライドを自分で話す時間を計測します。</p>
-      <div class="timer-actions"><button type="button" id="timerStartBtn" class="primary">▶ 開始</button><button type="button" id="timerResetBtn" class="secondary">↻ リセット</button></div>
-      <div class="timeline"><span>0:00</span><span>10:00</span><span>25:00</span></div><div class="timer-track"><div id="timerFill"></div><span class="ten-marker" aria-hidden="true"></span></div>
-      <p class="fineprint">提出規定は「10分を超え、25分以下」。録画時は、自分の音声が入っていることも確認してください。</p>
-    </section>
-  </main>
-  <footer>Vienna Speak Coach UK · 学会英語発表の個人練習用 · 端末・ブラウザーによって音声機能が異なります。</footer>
-</div>
+      <section class="slide-title" aria-labelledby="slideTitle">
+        <div class="slide-chip" id="slideChip">SLIDE 01</div>
+        <h2 id="slideTitle">Neither Too Close Nor Too Far</h2>
+        <div class="slide-sub"><span id="lineCount">全5文</span><span id="slidePace">発表目安40秒</span></div>
+      </section>
+      <section class="controls" aria-label="英語の音声読み上げ">
+        <div class="big-controls"><button class="primary" id="readAll" type="button">▶ このスライドを読み上げ</button><button id="stop" class="stop" type="button">■ 停止</button></div>
+        <div class="settings">
+          <label for="voice">英国英語の声 <select id="voice"><option value="default">端末へ英国英語を指定</option></select></label>
+          <label for="speed">読み上げ速度 <select id="speed"><option value="0.75">ゆっくり 0.75倍</option><option value="0.85" selected>練習 0.85倍</option><option value="1">通常 1.0倍</option><option value="1.1">速め 1.1倍</option></select></label>
+        </div>
+        <p id="voiceNotice" class="voice-notice" role="status">端末の英国英語音声を確認しています。</p>
+        <p id="status" class="status" role="status" aria-live="polite">「読み上げ」で英国英語のお手本を聞けます。</p>
+      </section>
+      <section class="script" aria-labelledby="scriptHeading">
+        <div class="script-heading"><h2 id="scriptHeading">読み上げ原稿</h2><small>英語 → カタカナ → 日本語</small></div>
+        <div id="sentences"></div>
+        <p class="pronunciation-note">カタカナは英国英語の発音や音のつながりを学ぶための目安です。実際の発音・強勢・イントネーションはお手本音声を優先してください。</p>
+      </section>
+    </main>
+    <nav class="nav" aria-label="スライド移動">
+      <button id="previous" type="button" class="secondary">← 前へ</button>
+      <label class="slide-select" for="jump">スライドを選ぶ<select id="jump" aria-label="移動するスライドを選択"></select></label>
+      <button id="next" type="button" class="primary" aria-label="次のスライドへ進む">次へ →</button>
+    </nav>
+    <footer>元の発表資料から、英語・カタカナ・日本語訳のみを収録しています。録音・音声認識・マイクは使用しません。</footer>
+  </div>
 </body>
 </html>
