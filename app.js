@@ -16,6 +16,8 @@
   const PAUSE_MS = 1200;            // "(pause)" の間
   const STORE_KEY = 'viennaUkReader.v1';
 
+  ensureImageDom();
+
   const el = {
     count: $('slideCount'), chip: $('slideChip'), title: $('slideTitle'),
     lineCount: $('lineCount'), pace: $('slidePace'), timer: $('timer'), paceFill: $('paceFill'),
@@ -25,10 +27,34 @@
     english: $('englishBlock'), kanaList: $('kanaList'), jaList: $('jaList'),
     kanaPanel: $('kanaPanel'), jaPanel: $('jaPanel'),
     prev: $('previous'), next: $('next'), jump: $('jump'), intro: $('intro'),
-    showSlide: $('showSlide'), figure: $('slideFigure'), img: $('slideImg'), zoom: $('slideZoom'),
+    showSlide: $('showSlide'), caption: $('slideCaption'), figure: $('slideFigure'), img: $('slideImg'), zoom: $('slideZoom'),
     lightbox: $('lightbox'), lbImg: $('lightboxImg'), lbCount: $('lbCount'),
     lbPrev: $('lbPrev'), lbNext: $('lbNext'), lbClose: $('lbClose'),
   };
+
+  // 古い index.html を使っていても画像が出るよう、必要な要素がなければ作る
+  function ensureImageDom() {
+    if (!document.getElementById('slideFigure')) {
+      const sec = document.querySelector('.slide-title') || document.querySelector('main');
+      const fig = document.createElement('figure');
+      fig.className = 'slide-figure'; fig.id = 'slideFigure';
+      fig.innerHTML = '<button type="button" class="slide-img-btn" id="slideZoom" aria-label="スライド画像を拡大">'
+        + '<img id="slideImg" alt="" width="1280" height="720" decoding="async"></button>'
+        + '<figcaption id="slideCaption">タップで拡大・左右スワイプでスライド移動</figcaption>';
+      if (sec) sec.prepend(fig);
+    }
+    if (!document.getElementById('lightbox')) {
+      const dlg = document.createElement('dialog');
+      dlg.id = 'lightbox'; dlg.className = 'lightbox';
+      dlg.innerHTML = '<img id="lightboxImg" alt=""><div class="lightbox-bar">'
+        + '<button type="button" id="lbPrev" class="secondary">←</button><span id="lbCount"></span>'
+        + '<button type="button" id="lbNext" class="secondary">→</button>'
+        + '<button type="button" id="lbClose" class="primary">閉じる</button></div>';
+      document.body.append(dlg);
+    }
+    const fc = document.querySelector('#slideFigure figcaption');
+    if (fc && !fc.id) fc.id = 'slideCaption';
+  }
 
   // スライド画像：1ファイル版では window.SLIDE_IMAGES に埋め込み、通常版は slides/ フォルダ
   const imgSrc = (n) => (window.SLIDE_IMAGES && window.SLIDE_IMAGES[n]) || `slides/slide-${pad(n)}.jpg`;
@@ -60,7 +86,7 @@
   function persist() {
     store.save({
       idx: state.idx, speed: el.speed.value, voice: el.voice.value,
-      showSlide: el.showSlide.checked, showKana: el.showKana.checked, showJa: el.showJa.checked, memorize: el.memorize.checked,
+      showSlide: el.showSlide ? el.showSlide.checked : true, showKana: el.showKana.checked, showJa: el.showJa.checked, memorize: el.memorize.checked,
       repeat: el.repeat.checked, autoNext: el.autoNext.checked, pauseEach: el.pauseEach.checked,
     });
   }
@@ -81,10 +107,11 @@
     document.title = `${pad(s.n)} ${s.title}｜Vienna UK Reader`;
 
     el.img.classList.remove('missing');
+    if (el.caption) el.caption.textContent = 'タップで拡大・左右スワイプでスライド移動';
     el.img.src = imgSrc(s.n);
     el.img.alt = `スライド${s.n}: ${s.title}`;
     if (SLIDES[state.idx + 1]) { const pre = new Image(); pre.src = imgSrc(SLIDES[state.idx + 1].n); }
-    if (el.lightbox.open) syncLightbox();
+    if (el.lightbox.hasAttribute('open')) syncLightbox();
 
     // English: スライド内の英文を1つの段落にまとめる
     el.english.replaceChildren();
@@ -157,7 +184,7 @@
   }
 
   function applyView() {
-    el.figure.classList.toggle('hidden', !el.showSlide.checked);
+    el.figure.classList.toggle('hidden', !!el.showSlide && !el.showSlide.checked);
     el.kanaPanel.classList.toggle('hidden', !el.showKana.checked);
     el.jaPanel.classList.toggle('hidden', !el.showJa.checked);
     el.english.classList.toggle('memorize', el.memorize.checked);
@@ -382,7 +409,7 @@
 
     // 保存済み設定を復元
     if (saved.speed) el.speed.value = saved.speed;
-    for (const k of ['showSlide', 'showKana', 'showJa', 'memorize', 'repeat', 'autoNext', 'pauseEach']) {
+    for (const k of ['showKana', 'showJa', 'memorize', 'repeat', 'autoNext', 'pauseEach']) {
       if (typeof saved[k] === 'boolean') el[k].checked = saved[k];
     }
 
@@ -397,18 +424,23 @@
       else { resetTimer(); startTimer(); setStatus('自分で話してみましょう。もう一度タップで停止。'); }
     });
 
-    el.img.addEventListener('error', () => el.img.classList.add('missing'));
+    if (el.showSlide && typeof saved.showSlide === 'boolean') el.showSlide.checked = saved.showSlide;
+    el.img.addEventListener('error', () => {
+      el.img.classList.add('missing');
+      if (el.caption) el.caption.textContent = '⚠ スライド画像を読み込めません。slides.js が同じ場所にあるか確認してください。';
+    });
     el.zoom.addEventListener('click', () => {
       syncLightbox();
-      if (typeof el.lightbox.showModal === 'function') el.lightbox.showModal(); else window.open(el.img.src, '_blank');
+      if (typeof el.lightbox.showModal === 'function') el.lightbox.showModal(); else el.lightbox.setAttribute('open', '');
     });
-    el.lbClose.addEventListener('click', () => el.lightbox.close());
+    const closeLb = () => { if (typeof el.lightbox.close === 'function') el.lightbox.close(); else el.lightbox.removeAttribute('open'); };
+    el.lbClose.addEventListener('click', closeLb);
     el.lbPrev.addEventListener('click', () => go(state.idx - 1, { keepScroll: true }));
     el.lbNext.addEventListener('click', () => go(state.idx + 1, { keepScroll: true }));
-    el.lbImg.addEventListener('click', () => el.lightbox.close());
+    el.lbImg.addEventListener('click', closeLb);
     addSwipe(el.zoom); addSwipe(el.lbImg);
 
-    [el.showSlide, el.showKana, el.showJa, el.memorize].forEach((c) => c.addEventListener('change', () => {
+    [el.showSlide, el.showKana, el.showJa, el.memorize].filter(Boolean).forEach((c) => c.addEventListener('change', () => {
       if (c === el.memorize) document.querySelectorAll('.sent.revealed').forEach((n) => n.classList.remove('revealed'));
       applyView(); persist();
     }));
@@ -430,7 +462,7 @@
 
     document.addEventListener('keydown', (e) => {
       const tag = (e.target.tagName || '').toLowerCase();
-      if (el.lightbox.open && e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
+      if (el.lightbox.hasAttribute('open') && e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
       if (tag === 'select' || tag === 'input' || e.metaKey || e.ctrlKey || e.altKey) return;
       if (e.key === 'ArrowRight') { e.preventDefault(); go(state.idx + 1); }
       else if (e.key === 'ArrowLeft') { e.preventDefault(); go(state.idx - 1); }
@@ -451,6 +483,14 @@
     }
 
     render();
+
+    // index.html に slides.js の読み込みがない場合は、ここで読み込む
+    if (!window.SLIDE_IMAGES) {
+      const sc = document.createElement('script');
+      sc.src = 'slides.js?v=4';
+      sc.onload = () => render();
+      document.head.append(sc);
+    }
   }
 
   init();

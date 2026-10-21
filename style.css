@@ -92,6 +92,7 @@ main { padding: 16px; display: grid; gap: 14px; }
 }
 .slide-img-btn img { display: block; width: 100%; height: auto; aspect-ratio: 16 / 9; object-fit: contain; }
 .slide-img-btn img.missing { visibility: hidden; }
+.slide-figure figcaption { overflow-wrap: anywhere; }
 .slide-figure figcaption { font-size: 11px; color: var(--muted); text-align: right; margin-top: 4px; }
 
 .lightbox {
