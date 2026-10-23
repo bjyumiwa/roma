@@ -1,15 +1,1 @@
-{
-  "name": "Vienna UK Reader",
-  "short_name": "UK Reader",
-  "description": "ウィーン発表の英語読み上げ練習",
-  "lang": "ja",
-  "start_url": "./index.html",
-  "scope": "./",
-  "display": "standalone",
-  "background_color": "#f6f3ee",
-  "theme_color": "#17364c",
-  "icons": [
-    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
-    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
-  ]
-}
+{"name":"Vienna UK Reader — VCAH 2026","short_name":"Vienna Reader","lang":"ja","start_url":"./index.html","scope":"./","display":"standalone","background_color":"#f5f9fb","theme_color":"#17364c","icons":[{"src":"icons/icon-192.png","sizes":"192x192","type":"image/png"},{"src":"icons/icon-512.png","sizes":"512x512","type":"image/png"}]}
